@@ -1,10 +1,19 @@
 #!/usr/bin/python
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+import os
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
+
+email = os.environ.get("SSL_CLIENT_S_DN_Email")
+kerberos = ""
+
+if email is not None:
+    i = email.find("@")
+    kerberos = email[:i]
+
 
 
 class Midnight(db.Model):
@@ -23,7 +32,7 @@ class Midnight(db.Model):
 
 @app.route('/')
 def hello_world():
-    return 'Hello, you!'
+    return 'Hello, ' + kerberos + '!'
 
 
 if __name__ == '__main__':
