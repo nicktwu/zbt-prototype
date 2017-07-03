@@ -166,8 +166,8 @@ def list_week_midnights(year, month, day):
         midnights = Midnight.query.filter(
             and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
             .all()
-        print "got midnights"
-        return jsonify([midnight.to_dict() for midnight in midnights]), 200, CORS_HEADER
+        response = [midnight.to_dict() for midnight in midnights]
+        return jsonify(response), 200, CORS_HEADER
 
 
 @app.route('/midnights/daylist/<int:year>/<int:month>/<int:day>')
