@@ -105,6 +105,10 @@ def get_status():
     }), 200, CORS_HEADER
 
 
+@app.route('/midnights/test/<int:year>/')
+def test(year):
+    return jsonify(year), 200, CORS_HEADER
+
 @app.route('/midnights/create', methods=['POST', 'OPTIONS'])
 def create_midnight():
     if request.method == "OPTIONS":
