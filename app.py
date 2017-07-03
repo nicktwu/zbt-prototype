@@ -54,7 +54,7 @@ class Midnight(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'date': str(self.date),
+            'date': self.date,
             'zebe': self.zebe,
             'task': self.task,
             'note': self.note,
@@ -83,8 +83,8 @@ class MidnightAccount(db.Model):
         return {
             'id': self.id,
             'semester': self.semester,
-            'start': str(self.start),
-            'end': str(self.end),
+            'start': self.start,
+            'end': self.end,
             'zebe': self.zebe,
             'balance': self.balance,
         }
