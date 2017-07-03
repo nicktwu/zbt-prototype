@@ -159,12 +159,13 @@ def create_midnights():
 
 @app.route('/midnights/weeklist/<int:year>/<int:month>/<int:day>')
 def list_week_midnights(year, month, day):
-    requested = python_date(year, month, day)
-    week_start = week_of(requested)
-    midnights = Midnight.query.filter(
-        and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
-        .all()
-    return jsonify([midnight.to_dict() for midnight in midnights]), 200, CORS_HEADER
+    with app.app_context():
+        requested = python_date(year, month, day)
+        week_start = week_of(requested)
+        midnights = Midnight.query.filter(
+            and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
+            .all()
+        return jsonify([midnight.to_dict() for midnight in midnights]), 200, CORS_HEADER
 
 
 @app.route('/midnights/daylist/<int:year>/<int:month>/<int:day>')
