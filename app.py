@@ -54,7 +54,7 @@ class Midnight(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'date': self.date,
+            'date': str(self.date),
             'zebe': self.zebe,
             'task': self.task,
             'note': self.note,
@@ -165,7 +165,8 @@ def list_week_midnights(year, month, day):
     midnights = Midnight.query.filter(
         and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
         .all()
-    response = [midnight.to_dict() for midnight in midnights]
+    responses = [midnight.to_dict() for midnight in midnights]
+    response = {'midnights': responses}
     return jsonify(response), 200, CORS_HEADER
 
 
