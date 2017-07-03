@@ -54,7 +54,7 @@ class Midnight(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'date': self.date,
+            'date': str(self.date),
             'zebe': self.zebe,
             'task': self.task,
             'note': self.note,
@@ -83,8 +83,8 @@ class MidnightAccount(db.Model):
         return {
             'id': self.id,
             'semester': self.semester,
-            'start': self.start,
-            'end': self.end,
+            'start': str(self.start),
+            'end': str(self.end),
             'zebe': self.zebe,
             'balance': self.balance,
         }
@@ -104,10 +104,6 @@ def get_status():
         'error': False,
     }), 200, CORS_HEADER
 
-
-@app.route('/midnights/test/<year>/')
-def test(year):
-    return jsonify(year), 200, CORS_HEADER
 
 @app.route('/midnights/create', methods=['POST', 'OPTIONS'])
 def create_midnight():
