@@ -155,7 +155,7 @@ def create_midnights():
         new_midnights.append(midnight)
         db.session.add(midnight)
     db.session.commit()
-    return jsonify([midnight.to_dict() for midnight in new_midnights]), 201, ALL_HEADERS
+    return jsonify({'midnights':[midnight.to_dict() for midnight in new_midnights]}), 201, ALL_HEADERS
 
 
 @app.route('/midnights/weeklist/<int:year>/<int:month>/<int:day>')
@@ -174,7 +174,7 @@ def list_week_midnights(year, month, day):
 def list_day_midnights(year, month, day):
     requested = python_date(year, month, day)
     midnights = Midnight.query.filter(Midnight.date == requested).all()
-    return jsonify([midnight.to_dict() for midnight in midnights]), 200, CORS_HEADER
+    return jsonify({'midnights':[midnight.to_dict() for midnight in midnights]}), 200, CORS_HEADER
 
 
 @app.route('/midnights/user/weeklist/<int:year>/<int:month>/<int:day>')
@@ -184,14 +184,14 @@ def list_user_week_midnights(year, month, day):
     midnights = Midnight.query.filter(
         and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
         .filter(Midnight.zebe == kerberos).all()
-    return jsonify([midnight.to_dict() for midnight in midnights]), 200, CORS_HEADER
+    return jsonify({'midnights':[midnight.to_dict() for midnight in midnights]}), 200, CORS_HEADER
 
 
 @app.route('/midnights/user/daylist/<int:year>/<int:month>/<int:day>')
 def list_user_day_midnights(year, month, day):
     requested = python_date(year, month, day)
     midnights = Midnight.query.filter(Midnight.date == requested).filter(Midnight.zebe == kerberos).all()
-    return jsonify([midnight.to_dict() for midnight in midnights]), 200, CORS_HEADER
+    return jsonify({'midnights':[midnight.to_dict() for midnight in midnights]}), 200, CORS_HEADER
 
 
 @app.route('/midnights/award/<int:id>/<int:points>', methods=['PUT', 'OPTIONS'])
