@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from flask import Flask, jsonify, abort, request
+from flask import Flask, json, jsonify, abort, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date as python_date, timedelta, datetime
 import os
@@ -98,7 +98,7 @@ def hello_world():
 @app.route('/midnights/status')
 def get_status():
     account = MidnightAccount.query.filter(MidnightAccount.zebe == kerberos).first()
-    return jsonify({
+    return json.dumps({
         'kerberos': kerberos,
         'details': account if account is None else account.to_dict(),
         'error': False,
@@ -160,14 +160,13 @@ def create_midnights():
 
 @app.route('/midnights/weeklist/<int:year>/<int:month>/<int:day>')
 def list_week_midnights(year, month, day):
-    with app.app_context():
-        requested = python_date(year, month, day)
-        week_start = week_of(requested)
-        midnights = Midnight.query.filter(
-            and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
-            .all()
-        response = [midnight.to_dict() for midnight in midnights]
-        return jsonify(response), 200, CORS_HEADER
+    requested = python_date(year, month, day)
+    week_start = week_of(requested)
+    midnights = Midnight.query.filter(
+        and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
+        .all()
+    response = [midnight.to_dict() for midnight in midnights]
+    return json.dumps(response), 200, CORS_HEADER
 
 
 @app.route('/midnights/daylist/<int:year>/<int:month>/<int:day>')
@@ -207,8 +206,7 @@ def award_points(id, points):
 
 
 def week_of(requested):
-    i = requested.isoweekday() % 7
-    return requested + timedelta(days=-i)
+    return requested + timedelta(days=-(requested.isoweekday() % 7))
 
 
 def valid_midnight(midnight):
