@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from flask import Flask, json, jsonify, abort, request
+from flask import Flask, jsonify, abort, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date as python_date, timedelta, datetime
 import os
@@ -98,7 +98,7 @@ def hello_world():
 @app.route('/midnights/status')
 def get_status():
     account = MidnightAccount.query.filter(MidnightAccount.zebe == kerberos).first()
-    return json.dumps({
+    return jsonify({
         'kerberos': kerberos,
         'details': account if account is None else account.to_dict(),
         'error': False,
@@ -166,7 +166,7 @@ def list_week_midnights(year, month, day):
         and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
         .all()
     response = [midnight.to_dict() for midnight in midnights]
-    return json.dumps(response), 200, CORS_HEADER
+    return jsonify(response), 200, CORS_HEADER
 
 
 @app.route('/midnights/daylist/<int:year>/<int:month>/<int:day>')
