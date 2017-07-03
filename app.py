@@ -8,6 +8,7 @@ from sqlalchemy import and_
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
+app.app_context().push()
 
 email = os.environ.get("SSL_CLIENT_S_DN_Email")
 kerberos = ""
