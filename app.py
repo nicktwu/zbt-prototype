@@ -96,7 +96,7 @@ def hello_world():
 
 @app.route('/midnights/status')
 def get_status():
-    account = MidnightAccount.query.filter(MidnightAccount.zebe == kerberos).one_or_none()
+    account = MidnightAccount.query.filter(MidnightAccount.zebe == kerberos).first()
     return jsonify({
         'kerberos': kerberos,
         'details': account if account is None else account.to_dict(),
