@@ -205,6 +205,10 @@ def award_points(id, points):
     db.session.commit()
     return jsonify({'midnight': midnight.to_dict()}), 200, ALL_HEADERS
 
+@app.route('/midnights/authorized')
+def is_authorized():
+    return jsonify({'authorized': (kerberos in midnight_permissions)}), 200, CORS_HEADER
+
 
 def week_of(requested):
     return requested + timedelta(days=-(requested.isoweekday() % 7))
