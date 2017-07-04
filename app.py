@@ -21,6 +21,8 @@ midnight_permissions = {'nwu', 'silwal'}
 
 CURRENT_SEMESTER = 'testing'
 
+MIDNIGHT_REQUIREMENT = 0
+
 ALL_HEADERS = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -83,8 +85,8 @@ class MidnightAccount(db.Model):
         return {
             'id': self.id,
             'semester': self.semester,
-            'start': self.start,
-            'end': self.end,
+            'start': str(self.start),
+            'end': str(self.end),
             'zebe': self.zebe,
             'balance': self.balance,
         }
@@ -178,7 +180,7 @@ def list_user_week_status(year, month, day):
         and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
         .filter(Midnight.zebe == kerberos).all()
     account = MidnightAccount.query.filter(MidnightAccount.zebe == kerberos).first()
-    return jsonify({'account':account, 'midnights':[midnight.to_dict() for midnight in midnights]}), 200, CORS_HEADER
+    return jsonify({'account':account, 'goal':MIDNIGHT_REQUIREMENT, 'midnights':[midnight.to_dict() for midnight in midnights]}), 200, CORS_HEADER
 
 
 @app.route('/midnights/award/<int:id>/<int:points>', methods=['PUT', 'OPTIONS'])
@@ -191,6 +193,7 @@ def award_points(id, points):
     midnight.awarded = points
     db.session.commit()
     return jsonify({'midnight': midnight.to_dict()}), 200, ALL_HEADERS
+
 
 @app.route('/midnights/authorized')
 def is_authorized():
