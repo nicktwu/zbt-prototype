@@ -21,6 +21,26 @@ class Zebe(db.Model):
         }
 
 
+class Semester(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    start = db.Column(db.Date)
+    end = db.Column(db.Date)
+
+    def __init__(self, name, start, end):
+        self.name = name
+        self.start = start
+        self.end = end
+
+    def to_dict(self):
+        return {
+            'id':self.id,
+            'name':self.name,
+            'start':str(self.start),
+            'end':str(self.end),
+        }
+
+
 class Midnight(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date)
@@ -56,16 +76,12 @@ class Midnight(db.Model):
 class MidnightAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     semester = db.Column(db.String(50))
-    start = db.Column(db.Date)
-    end = db.Column(db.Date)
     zebe = db.Column(db.String(30))
     balance = db.Column(db.Integer)
     requirement = db.Column(db.Integer)
 
-    def __init__(self, semester, start, end, zebe, balance, requirement):
+    def __init__(self, semester, zebe, balance, requirement):
         self.semester = semester
-        self.start = start
-        self.end = end
         self.zebe = zebe
         self.balance = balance
         self.requirement = requirement
@@ -74,9 +90,26 @@ class MidnightAccount(db.Model):
         return {
             'id': self.id,
             'semester': self.semester,
-            'start': str(self.start),
-            'end': str(self.end),
             'zebe': self.zebe,
             'balance': self.balance,
             'required': self.requirement,
+        }
+
+
+class MidnightTypeDefault(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    value = db.Column(db.Integer)
+    description = db.Column(db.String(500))
+
+    def __init__(self, name, value, description):
+        self.name = name
+        self.value = value
+        self.description = description
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'value': self.value,
+            'description': self.description,
         }
