@@ -27,7 +27,7 @@ CORS_HEADER = {
 def all_tickets():
     tickets = WorkweekTicket.query.all()
     return jsonify(
-        {'tickets': [ticket.to_dict() for ticket in tickets], 'authorized': kerberos in DEVS}), 200, CORS_HEADER
+        {'tickets': [ticket.to_dict() for ticket in tickets], 'authorized': kerberos in devs}), 200, CORS_HEADER
 
 
 @workweek_page.route('/take/<int:id>')
