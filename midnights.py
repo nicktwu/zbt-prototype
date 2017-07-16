@@ -23,7 +23,7 @@ MIDNIGHT_REQUIREMENT = 0
 
 ALL_HEADERS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
     'Access-Control-Allow-Headers': 'Accept, Content-Type',
 }
 
@@ -67,16 +67,74 @@ def list_user_week_status(year, month, day):
     midnights = Midnight.query.filter(
         and_(Midnight.date >= week_start, Midnight.date <= week_start + timedelta(days=7))) \
         .filter(Midnight.zebe == kerberos).all()
-    account = MidnightAccount.query.filter(MidnightAccount.zebe == kerberos).filter(MidnightAccount.semester == CURRENT_SEMESTER).first()
+    account = MidnightAccount.query.filter(MidnightAccount.zebe == kerberos).filter(
+        MidnightAccount.semester == CURRENT_SEMESTER).first()
+    reviewed = Midnight.query.filter(Midnight.reviewed).filter(
+        Midnight.date >= python_date.today() + timedelta(days=-7)) \
+        .filter(Midnight.zebe == kerberos)
     return jsonify({'account': account.to_dict(), 'goal': MIDNIGHT_REQUIREMENT,
-                    'midnights': [midnight.to_dict() for midnight in midnights]}), 200, CORS_HEADER
+                    'midnights': [midnight.to_dict() for midnight in midnights],
+                    'reviewed': [midnight.to_dict() for midnight in reviewed]}), 200, CORS_HEADER
 
 
 @midnights_page.route('/options')
 def list_options():
     zebes = [zebe.to_dict() for zebe in Zebe.query.filter(Zebe.current).all()]
     defaults = [default.to_dict() for default in MidnightTypeDefault.query.all()]
-    return jsonify({'zebes':zebes, 'defaults':defaults, 'authorized': (kerberos in midnight_permissions)}), 200, CORS_HEADER
+    return jsonify(
+        {'zebes': zebes, 'defaults': defaults, 'authorized': (kerberos in midnight_permissions)}), 200, CORS_HEADER
+
+
+@midnights_page.route('/tasks', methods=['GET', 'PUT', 'OPTIONS'])
+def list_tasks():
+    if kerberos not in midnight_permissions:
+        abort(401)
+    if request.method == "OPTIONS":
+        return jsonify({'status': 'ok'}), 200, ALL_HEADERS
+    if request.method == "PUT":
+        return jsonify({'status': 'ok'}), 200, ALL_HEADERS
+    if request.method == "GET":
+        return jsonify(
+            {'tasks': [task.to_dict() for task in MidnightTypeDefault.query.all()]}
+        ), 200, CORS_HEADER
+
+
+@midnights_page.route('/create_type', methods=['POST','OPTIONS'])
+def create_type():
+    if kerberos not in midnight_permissions:
+        abort(401)
+    if request.method == "OPTIONS":
+        return jsonify({'status': 'ok'}), 200, ALL_HEADERS
+    if not request.json:
+        abort(400)
+    if 'value' not in request.json or 'name' not in request.json:
+        abort(400)
+    q = MidnightTypeDefault.query.filter(MidnightTypeDefault.name == request.json['name']).count()
+    if q > 0:
+        return jsonify({'error':'Name already exists'}), 200, ALL_HEADERS
+    default = MidnightTypeDefault(request.json['name'], request.json['value'], request.json.get('description',''))
+    db.session.add(default)
+    db.session.commit()
+    return jsonify({'type': default.to_dict()}), 201, ALL_HEADERS
+
+
+@midnights_page.route('/update_types', methods=['PUT', 'OPTIONS'])
+def update_types():
+    if kerberos not in midnight_permissions:
+        abort(401)
+    if request.method == "OPTIONS":
+        return jsonify({'status':'ok'}), 200, ALL_HEADERS
+    if not request.json:
+        abort(400)
+    if 'types' not in request.json:
+        abort(400)
+    for t in request.json['types']:
+        task = MidnightTypeDefault.query.get_or_404(t.get('id'))
+        task.value = t.get('value')
+        task.description = t.get('description')
+    db.session.commit()
+    return jsonify({'status': 'ok'}), 200, ALL_HEADERS
+
 
 @midnights_page.route('/authorized')
 def is_authorized():
@@ -86,7 +144,7 @@ def is_authorized():
 @midnights_page.route('/create', methods=['POST', 'OPTIONS'])
 def create_midnight():
     if request.method == "OPTIONS":
-        return jsonify({'status':'ok'}), 200, ALL_HEADERS
+        return jsonify({'status': 'ok'}), 200, ALL_HEADERS
     if kerberos not in midnight_permissions:
         abort(401)
     if not request.json:
@@ -101,6 +159,7 @@ def create_midnight():
         request.json.get('feedback', ''),
         request.json['potential'],
         request.json.get('awarded', 0),
+        request.json.get('reviewed', False),
     )
     db.session.add(midnight)
     db.session.commit()
@@ -110,7 +169,7 @@ def create_midnight():
 @midnights_page.route('/create_multiple', methods=['POST', 'OPTIONS'])
 def create_midnights():
     if request.method == "OPTIONS":
-        return jsonify({'status':'ok'}), 200, ALL_HEADERS
+        return jsonify({'status': 'ok'}), 200, ALL_HEADERS
     if kerberos not in midnight_permissions:
         abort(401)
     if not request.json:
@@ -129,6 +188,7 @@ def create_midnights():
             new_midnight.get('feedback', ''),
             new_midnight['potential'],
             new_midnight.get('awarded', 0),
+            new_midnight.get('reviewed', False),
         )
         new_midnights.append(midnight)
         db.session.add(midnight)
@@ -150,7 +210,7 @@ def get_creatable_accounts():
 @midnights_page.route('/create_accounts', methods=['POST', 'OPTIONS'])
 def create_accounts():
     if request.method == "OPTIONS":
-        return jsonify({'status':'ok'}), 200, ALL_HEADERS
+        return jsonify({'status': 'ok'}), 200, ALL_HEADERS
     if kerberos not in midnight_permissions:
         abort(401)
     if not request.json:
@@ -159,10 +219,10 @@ def create_accounts():
         abort(400)
     new_accounts = []
     for new_account in request.json['accounts']:
-        old_account = MidnightAccount.query.filter(MidnightAccount.semester == PREVIOUS_SEMESTER)\
+        old_account = MidnightAccount.query.filter(MidnightAccount.semester == PREVIOUS_SEMESTER) \
             .filter(MidnightAccount.zebe == new_account).first()
-        check = MidnightAccount.query\
-            .filter(MidnightAccount.semester == CURRENT_SEMESTER)\
+        check = MidnightAccount.query \
+            .filter(MidnightAccount.semester == CURRENT_SEMESTER) \
             .filter(MidnightAccount.zebe == new_account).count()
         bal = 0
         if old_account is not None:
@@ -180,16 +240,32 @@ def create_accounts():
     return jsonify({'midnights': [account.to_dict() for account in new_accounts]}), 201, ALL_HEADERS
 
 
-@midnights_page.route('/award/<int:id>/<int:points>', methods=['PUT', 'OPTIONS'])
-def award_points(id, points):
+@midnights_page.route('/award/<int:id>', methods=['PUT', 'OPTIONS'])
+def award_points(id):
     if request.method == "OPTIONS":
-        return jsonify({'status':'ok'}), 200, ALL_HEADERS
+        return jsonify({'status': 'ok'}), 200, ALL_HEADERS
     if kerberos not in midnight_permissions:
         abort(401)
+    if not request.json or 'points' not in request.json:
+        abort(400)
     midnight = Midnight.query.get_or_404(id)
-    midnight.awarded = points
+    midnight.awarded = request.json['points']
+    midnight.feedback = request.json.get('note', '')
+    midnight.reviewed = True
+    zebe = MidnightAccount.query.filter(MidnightAccount.semester == CURRENT_SEMESTER).filter(
+        MidnightAccount.zebe == midnight.zebe).one()
+    zebe.balance = zebe.balance + request.json['points']
     db.session.commit()
     return jsonify({'midnight': midnight.to_dict()}), 200, ALL_HEADERS
+
+
+@midnights_page.route('/review')
+def get_midnights_to_review():
+    if kerberos not in midnight_permissions:
+        abort(401)
+    present = python_date.today()
+    midnights = Midnight.query.filter(Midnight.reviewed.is_(False)).filter(present >= Midnight.date).all()
+    return jsonify({'midnights': [midnight.to_dict() for midnight in midnights]}), 200, CORS_HEADER
 
 
 def valid_midnight(midnight):

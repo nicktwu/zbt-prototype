@@ -34,10 +34,10 @@ class Semester(db.Model):
 
     def to_dict(self):
         return {
-            'id':self.id,
-            'name':self.name,
-            'start':str(self.start),
-            'end':str(self.end),
+            'id': self.id,
+            'name': self.name,
+            'start': str(self.start),
+            'end': str(self.end),
         }
 
 
@@ -48,10 +48,11 @@ class Midnight(db.Model):
     task = db.Column(db.String(80))
     note = db.Column(db.String(300))
     feedback = db.Column(db.String(300))
-    potential = db.Column(db.Integer)
-    awarded = db.Column(db.Integer)
+    potential = db.Column(db.Float)
+    awarded = db.Column(db.Float)
+    reviewed = db.Column(db.Boolean)
 
-    def __init__(self, date, zebe, task, note, feedback, potential, awarded):
+    def __init__(self, date, zebe, task, note, feedback, potential, awarded, reviewed):
         self.date = date
         self.zebe = zebe
         self.task = task
@@ -59,6 +60,7 @@ class Midnight(db.Model):
         self.feedback = feedback
         self.potential = potential
         self.awarded = awarded
+        self.reviewed = reviewed
 
     def to_dict(self):
         return {
@@ -70,6 +72,7 @@ class Midnight(db.Model):
             'feedback': self.feedback,
             'potential': self.potential,
             'awarded': self.awarded,
+            'reviewed': self.reviewed
         }
 
 
@@ -77,8 +80,8 @@ class MidnightAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     semester = db.Column(db.String(50))
     zebe = db.Column(db.String(30))
-    balance = db.Column(db.Integer)
-    requirement = db.Column(db.Integer)
+    balance = db.Column(db.Float)
+    requirement = db.Column(db.Float)
 
     def __init__(self, semester, zebe, balance, requirement):
         self.semester = semester
@@ -99,7 +102,7 @@ class MidnightAccount(db.Model):
 class MidnightTypeDefault(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80))
-    value = db.Column(db.Integer)
+    value = db.Column(db.Float)
     description = db.Column(db.String(500))
 
     def __init__(self, name, value, description):
@@ -109,7 +112,57 @@ class MidnightTypeDefault(db.Model):
 
     def to_dict(self):
         return {
+            'id': self.id,
             'name': self.name,
             'value': self.value,
             'description': self.description,
+        }
+
+
+class MidnightTrade(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    midnight = db.Column(db.Integer, db.ForeignKey('midnight.id'))
+    zebe = db.Column(db.Integer, db.ForeignKey('midnight_account.id'))
+    offered = db.Column(db.Float)
+    completed = db.Column(db.Boolean)
+    taker = db.Column(db.String(30))
+
+    def __init__(self, midnight, zebe, offered, completed, taker):
+        self.midnight = midnight
+        self.zebe = zebe
+        self.offered = offered
+        self.completed = completed
+        self.taker = taker
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'midnight': self.midnight,
+            'zebe': self.zebe,
+            'offered': self.offered,
+            'completed': self.completed,
+            'taker': self.taker,
+        }
+
+
+class WorkweekTicket(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(500))
+    hours = db.Column(db.Float)
+    taker = db.Column(db.String(30))
+    completed = db.Column(db.Boolean)
+
+    def __init__(self, description, hours, taken, completed):
+        self.description = description
+        self.hours = hours
+        self.taker = taken
+        self.completed = completed
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'description': self.description,
+            'hours': self.hours,
+            'taker': self.taker,
+            'completed': self.completed,
         }
