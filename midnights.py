@@ -4,6 +4,7 @@ from datetime import date as python_date, timedelta, datetime
 from database import db
 from models import Zebe, Midnight, MidnightAccount, MidnightTypeDefault
 from sqlalchemy import and_
+from permissions import midnight_permissions
 
 midnights_page = Blueprint('midnights_page', __name__)
 
@@ -13,8 +14,6 @@ kerberos = ""
 if email is not None:
     i = email.find("@")
     kerberos = email[:i]
-
-midnight_permissions = {'nwu', 'silwal'}
 
 CURRENT_SEMESTER = 'testing'
 PREVIOUS_SEMESTER = 'old-testing'

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, abort
 from models import WorkweekTicket
-from datetime import date as python_date
+from permissions import workweek_devs as devs
 from database import db
 import os
 
@@ -22,8 +22,6 @@ CORS_HEADER = {
     'Access-Control-Allow-Origin': '*',
 }
 
-DEVS = ['nwu']
-
 
 @workweek_page.route('/')
 def all_tickets():
@@ -34,7 +32,7 @@ def all_tickets():
 
 @workweek_page.route('/take/<int:id>')
 def take_ticket(id):
-    if kerberos not in DEVS:
+    if kerberos not in devs:
         return jsonify({'authorized': False}), 200, CORS_HEADER
     else:
         ticket = WorkweekTicket.query.get_or_404(id)
